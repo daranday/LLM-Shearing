@@ -7,7 +7,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 from argparse import Namespace as NS
-from typing import Any, List
+from typing import List
 
 from composer.core.time import Time
 
@@ -142,6 +142,8 @@ class L0Module(nn.Module):
             self.target_model_info = self.set_model_info(target_model_cfg, n_matrix_mlp=n_matrix_mlp)
         
         # l0 config
+        # import pdb
+        # pdb.set_trace()
         self.pruning_modules = l0_module_cfg.pruning_modules        
         self.start_sparsity = l0_module_cfg.start_sparsity 
         self.lagrangian_warmup_steps = Time.from_timestring(l0_module_cfg.lagrangian_warmup_steps).value

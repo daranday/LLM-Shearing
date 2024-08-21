@@ -25,14 +25,13 @@ from omegaconf import OmegaConf as om
 from torch import nn
 from torch.optim.optimizer import Optimizer
 
-from llmshearing.callbacks.callbacks import DebugCallback
 from llmshearing.callbacks.dynamic_loading_callback import \
     DynamicLoadingCallback
 from llmshearing.callbacks.pruning_callback import PruningCallback
 from llmshearing.datasets.load_text_dataloader import build_text_dataloader
 from llmshearing.models.model_registry import COMPOSER_MODEL_REGISTRY
 
-streaming.base.util.clean_stale_shared_memory()
+# streaming.base.util.clean_stale_shared_memory()
 
 def is_one_hour(run_name: str):
     """ Check if the run name is for one hour training. """

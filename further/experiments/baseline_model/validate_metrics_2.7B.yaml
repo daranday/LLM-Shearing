@@ -1,0 +1,8 @@
+resources:
+  slots_per_trial: 1
+searcher:
+  name: single
+  max_length: 1
+  metric: not_relevant
+entrypoint:
+  sh validate_sheared_2.7B_metrics.sh

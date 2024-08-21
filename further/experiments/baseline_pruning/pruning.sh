@@ -1,21 +1,21 @@
 # pruning llama2 7b -> 3b or 1.3b
 
 # Please specify the working folder
-PROJ_DIR=/scratch/gpfs/mengzhou/space2/LLM-Shearing
+PROJ_DIR=/nvmefs1/daranhe/llm-shearing/LLM-Shearing
 LAUNCH_SCRIPT=${PROJ_DIR}/llmshearing/scripts/launch.sh
-DATA_DIR=/scratch/gpfs/mengzhou/llm_data/version5-uint16/500b_dedup_4k/for_prune
-OUTPUT_DIR=/scratch/gpfs/mengzhou/space2/out/test_release_pruning_full
+DATA_DIR=/nvmefs1/daranhe/llm-shearing/data/for_prune
+OUTPUT_DIR=/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full
 TRAIN_SCRIPT=${PROJ_DIR}/llmshearing/train.py
-MODEL_PATH=/projects/DANQIC/mengzhou/LLaMA2
+MODEL_PATH=/nvmefs1/daranhe/llm-shearing/models/Sheared-LLaMA-1.3B-composer/state_dict.pt
 
 # Specify $PROJ_DIR in scripts/launch.sh and scripts/srun_launch.sh if using slurm
 
 test=False
 
-from_model=7b # source model size
-to_model=2.7b # target model size
+from_model=1.3b-sheared # source model size
+to_model=350m # target model size
 config_file=${PROJ_DIR}/llmshearing/configs/llama2/${from_model}.yaml
-path=$MODEL_PATH/mosaic-7B/state_dict.pt
+path=$MODEL_PATH
 
 # data setup
 data_local=${DATA_DIR}
@@ -28,8 +28,8 @@ device_eval_batch_size=8
 
 # learning setup
 lr=1e-4 # learning rate for the main parameters
-max_duration=3200ba # 0.42B tokens
-save_interval=3200ba # save in the end
+max_duration=2ba # 0.42B tokens
+save_interval=2ba # save in the end
 t_warmup=320ba # 10% learning rate warmup 
 
 # dynamic loading setup
@@ -45,6 +45,8 @@ elif [[ $to_model == 2.7b ]]; then
     target_loss=[1.8712,0.6883,2.0325,1.5353,1.6297,1.3560,2.0328] # 2.7b predicted loss from scaling law
 elif [[ $to_model == 370m ]]; then
     target_loss=[2.1401,0.8694,2.3625,1.7791,2.047,1.6637,2.3139] # 410m predicted loss from scaling law
+elif [[ $to_model == 350m ]]; then
+    target_loss=[2.1401,0.8694,2.3625,1.7791,2.047,1.6637,2.3139] # 350m we use roughly the same as 410m
 fi
 eval_split_name=eval_merge # eval on all domains
 eval_target_model=false # evaluate on the current model, not the target model, otherwise the loss will be inaccurate
@@ -60,6 +62,8 @@ elif [[ $to_model == 2.7b ]]; then
     target_d_model=2560; target_n_heads=20; target_n_layers=32; target_intermediate_size=6912
 elif [[ $to_model == 370m ]]; then
     target_d_model=1024; target_n_heads=8; target_n_layers=24; target_intermediate_size=2816
+elif [[ $to_model == 350m ]]; then
+    target_d_model=1024; target_n_heads=16; target_n_layers=20; target_intermediate_size=4096
 fi
 
 # save directroy
@@ -73,13 +77,8 @@ if [[ $test == True ]]; then t=00-01:00:00; else t=00-20:00:00; fi
 # composer $TRAIN_SCRIPT \
 
 # Run with slurm    
-sbatch --job-name ${run_name} \
-    --nodes=4 \
-    --gpus-per-node=2 \
-    --mem=512gb \
-    --cpus-per-task=8 \
-    --time $t \
-    $LAUNCH_SCRIPT \
+# 
+python -m composer $PROJ_DIR/llmshearing/train.py \
     $config_file \
     run_name=${run_name} \
     data_local=${data_local} \

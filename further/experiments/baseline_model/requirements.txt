@@ -1,0 +1,8 @@
+determined
+
+# to run locally
+# transformers
+# langchain
+# langchain_community
+# langchain-huggingface
+# lm_eval
