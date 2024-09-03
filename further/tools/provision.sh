@@ -9,4 +9,5 @@ sh install_conda.sh
 conda install -c conda-forge \
     htop \
     tmux \
+    gh \
     -y
