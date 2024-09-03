@@ -1,6 +1,6 @@
-# cp -a assets/dotfiles/. ~/
+cp -a assets/dotfiles/. ~/
 
-# sh install_conda.sh
+sh install_conda.sh
 
 # Source conda
 . ~/.bash_profile
@@ -13,4 +13,5 @@ conda install -c conda-forge \
     -y
 
 # Install pip packages
-pip install -r assets/requirements.txt
+pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+pip install flash-attn==1.0.3.post
