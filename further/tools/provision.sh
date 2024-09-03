@@ -1,6 +1,6 @@
-cp -a assets/. ~/
+# cp -a assets/dotfiles/. ~/
 
-sh install_conda.sh
+# sh install_conda.sh
 
 # Source conda
 . ~/.bash_profile
@@ -11,3 +11,6 @@ conda install -c conda-forge \
     tmux \
     gh \
     -y
+
+# Install pip packages
+pip install -r assets/requirements.txt
