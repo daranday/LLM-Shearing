@@ -1,9 +1,9 @@
-cp assets/.* ~/
+cp -a assets/. ~/
 
 sh install_conda.sh
 
 # Source conda
-. ~/.profile
+. ~/.bash_profile
 
 # Install necessary packages
 conda install -c conda-forge \
