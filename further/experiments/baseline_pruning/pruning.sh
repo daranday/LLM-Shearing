@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # pruning llama2 7b -> 3b or 1.3b
 
 # Please specify the working folder
