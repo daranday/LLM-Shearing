@@ -9,7 +9,6 @@ run_name: # If left blank, will be read from env var $COMPOSER_RUN_NAME
 
 model:
   name: mosaic_llama2_7b 
-  path: /projects/DANQIC/mengzhou/LLaMA2/mosaic-7B/state_dict.pt
   init_device: "cpu" 
   tokenizer_name: ${tokenizer_name}
   d_model: 4096
@@ -26,7 +25,7 @@ model:
   rms_norm_eps: 1e-5
   l0_module:
     start_sparsity: 0.0
-    target_sparsity: 0.5
+    # target_sparsity: 0.5
     pruning_modules: ["head", "head_layer", "mlp", "intermediate"]
     lagrangian_warmup_steps: 320ba 
     target_model:
@@ -131,13 +130,13 @@ callbacks:
 
 loggers:
   wandb: 
-    project: pruning
+    project: pruning-from-7b-to-1.3b
+    entity: esmoq-
     name: ${run_name}
-    entity: pruning
     init_kwargs:
-      mode: offline
+      # mode: offline
       dir: wandb_dir
 
 # Checkpoint to local filesystem or remote object store
 save_interval: 800ba 
-save_folder: save_dir
+save_folder: save_dir 
