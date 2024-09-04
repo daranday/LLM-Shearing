@@ -14,6 +14,7 @@ conda install -c conda-forge \
     htop \
     tmux \
     gh \
+    tree \
     -y
 
 # Install pip packages
