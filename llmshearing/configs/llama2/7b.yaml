@@ -1,6 +1,6 @@
 data_local: /scratch/gpfs/mengzhou/space2/examples/examples/llm/llama-dedup
 data_remote: # If blank, files must be present in data_local
-tokenizer_name: /projects/DANQIC/mengzhou/LLaMA2/hf-7B 
+tokenizer_name: princeton-nlp/Sheared-LLaMA-1.3B
 max_seq_len: 4096
 global_seed: 17
 
