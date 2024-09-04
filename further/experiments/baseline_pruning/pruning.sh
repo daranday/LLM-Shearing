@@ -30,8 +30,8 @@ device_eval_batch_size=8
 
 # learning setup
 lr=1e-4 # learning rate for the main parameters
-max_duration=2ba # 0.42B tokens
-save_interval=2ba # save in the end
+max_duration=3200ba # 0.42B tokens
+save_interval=3200ba # save in the end
 t_warmup=320ba # 10% learning rate warmup 
 
 # dynamic loading setup
