@@ -1,5 +1,5 @@
 resources:
-  slots_per_trial: 2  # for fsdp
+  slots_per_trial: 8  # for fsdp
   resource_pool: A100
 
 searcher:
