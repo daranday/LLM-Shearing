@@ -1,5 +1,6 @@
 export PATH=/run/determined/pythonuserbase/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/determined/workdir/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
 export DET_MASTER=10.182.1.43
+export WANDB_API_KEY=92810afd9a447f2db34620b41937735ccd1cc935
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
@@ -16,7 +17,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-conda activate default
+conda activate /nvmefs1/daranhe/.conda/envs/default
 
 # some more ls aliases
 alias ll='ls -alFhtr'
