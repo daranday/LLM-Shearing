@@ -131,7 +131,7 @@ callbacks:
 
 loggers:
   wandb: 
-    project: pruning-from-1.3b-sheared
+    project: pruning-from-1.3b-sheared-to-350m
     entity: esmoq-
     name: ${run_name}
     init_kwargs:

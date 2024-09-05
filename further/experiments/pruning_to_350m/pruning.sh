@@ -1,12 +1,13 @@
 #!/bin/bash
 
+. /nvmefs1/daranhe/.bashrc
 # pruning llama2 7b -> 3b or 1.3b
 
 # Please specify the working folder
 PROJ_DIR=/nvmefs1/daranhe/llm-shearing/LLM-Shearing
 LAUNCH_SCRIPT=${PROJ_DIR}/llmshearing/scripts/launch.sh
 DATA_DIR=/nvmefs1/daranhe/llm-shearing/data/for_prune
-OUTPUT_DIR=/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full
+OUTPUT_DIR=/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m
 TRAIN_SCRIPT=${PROJ_DIR}/llmshearing/train.py
 MODEL_PATH=/nvmefs1/daranhe/llm-shearing/models/Sheared-LLaMA-1.3B-composer/state_dict.pt
 
@@ -77,6 +78,7 @@ if [[ $test == True ]]; then t=00-01:00:00; else t=00-20:00:00; fi
 
 # Run in bash, it will automatically use resources available in the current environment
 # composer $TRAIN_SCRIPT \
+
 
 # Run with slurm    
 # 
