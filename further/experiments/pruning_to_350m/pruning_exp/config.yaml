@@ -1,7 +1,0 @@
-resources:
-  slots_per_trial: 2  # for fsdp
-  resource_pool: A100
-searcher:
-  name: single
-  max_length: 1
-  metric: not_relevant
