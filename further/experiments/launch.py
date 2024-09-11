@@ -2,6 +2,9 @@ import argparse
 import subprocess as sp
 from pathlib import Path
 
+import yaml
+from determined.common.experimental import Determined
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 
@@ -10,44 +13,53 @@ class Runner:
         self.args = args
         assert self.args.cpu or self.args.gpu, "Please specify --cpu or --gpu"
 
-    def create_exp_args(self):
-        slots_args = []
+    def get_config(self):
+        config = yaml.safe_load(open(SCRIPT_DIR / "default_config.yaml"))
+
+        config["entrypoint"] = f"bash python_loader.sh {' '.join(self.args.entrypoint)}"
+
         if self.args.cpu:
-            slots_args = ["--config", "resources.slots_per_trial=0"]
+            config["resources"]["slots_per_trial"] = 0
         elif self.args.gpu:
-            slots_args = ["--config", f"resources.slots_per_trial={self.args.gpu}"]
+            config["resources"]["slots_per_trial"] = self.args.gpu
 
-        entrypoint_args = [
-            "--config",
-            f"entrypoint=bash python_loader.sh {' '.join(self.args.entrypoint)}",
-        ]
-
-        return [
-            "det",
-            "experiment",
-            "create",
-            *slots_args,
-            *entrypoint_args,
-            "--project_id",
-            "253",
-            "default_config.yaml",
-            ".",
-        ]
+        return config
 
     def run(self):
-        args = self.create_exp_args()
-        print(f"Running with args: {args}")
-        sp.run(args, cwd=SCRIPT_DIR)
+        client = Determined()
+
+        exp = client.create_experiment(
+            config=self.get_config(),
+            model_dir=".",
+            project_id=253,
+        )
+
+        exp_url = f"http://mlds-determined.us.rdlabs.hpecorp.net:8080/det/experiments/{exp.id}/logs"
+
+        print("Experiment started at {}".format(exp_url))
+
+        try:
+            sp.run(["det", "e", "logs", str(exp.id), "-f"], cwd=SCRIPT_DIR)
+        except KeyboardInterrupt:
+            to_kill_response = input("Kill experiment? [y/N]: ")
+            to_kill = "y" in to_kill_response.lower()
+            if to_kill:
+                exp.kill()
+                print(f"Experiment {exp.id} killed at {exp_url}")
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Launching experiment")
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--gpu", type=int)
-    parser.add_argument("--entrypoint", required=True, nargs="+", type=str)
+    parser.add_argument(
+        "entrypoint", nargs=argparse.REMAINDER, help="Positional arguments after --"
+    )
+    parser.add_argument("--host", default="localhost")
     args = parser.parse_args()
-    if isinstance(args.entrypoint, str):
-        args.entrypoint = [args.entrypoint]
+    assert "--" in args.entrypoint, "Please specify -- before entrypoint"
+    args.entrypoint = args.entrypoint[args.entrypoint.index("--") + 1 :]
+    assert args.entrypoint, "Please specify entrypoint"
     return args
 
 
