@@ -34,7 +34,7 @@ class Runner:
             project_id=253,
         )
 
-        exp_url = f"http://mlds-determined.us.rdlabs.hpecorp.net:8080/det/experiments/{exp.id}/logs"
+        exp_url = f"{self.args.host}/det/experiments/{exp.id}/logs"
 
         print("Experiment started at {}".format(exp_url))
 
@@ -55,7 +55,9 @@ def parse_args():
     parser.add_argument(
         "entrypoint", nargs=argparse.REMAINDER, help="Positional arguments after --"
     )
-    parser.add_argument("--host", default="localhost")
+    parser.add_argument(
+        "--host", default="http://mlds-determined.us.rdlabs.hpecorp.net:8080"
+    )
     args = parser.parse_args()
     assert "--" in args.entrypoint, "Please specify -- before entrypoint"
     args.entrypoint = args.entrypoint[args.entrypoint.index("--") + 1 :]
