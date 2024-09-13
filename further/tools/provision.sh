@@ -1,6 +1,6 @@
 cp -a assets/dotfiles/. ~/
 
-sh install_conda.sh
+bash install_conda.sh
 
 conda init
 conda create -n default python=3.10 -y
