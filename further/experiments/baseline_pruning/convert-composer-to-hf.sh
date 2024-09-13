@@ -1,5 +1,5 @@
 MODEL_DIR=/nvmefs1/daranhe/llm-shearing/out/pruning_7b_to_1.3b/llama2_7b_pruning_scaling_doremi_to1.3b_sl4096/
-MODEL_PATH=$MODEL_DIR/latest-rank0.pt
+MODEL_PATH=$MODEL_DIR/pruned-latest-rank0.pt
 OUTPUT_PATH=$MODEL_DIR/hf-latest_rank0
 MODEL_CLASS=LlamaForCausalLM
 HIDDEN_SIZE=2048
