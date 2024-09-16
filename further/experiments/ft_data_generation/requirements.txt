@@ -1,2 +1,4 @@
 sentencepiece
 mosaicml-streaming
+pyarrow
+pandas
