@@ -1,6 +1,7 @@
 # Check if 'conda' command is available
 if command -v conda &> /dev/null; then
     echo "Conda is available. Exiting script."
+    conda init
     exit 0
 fi
 

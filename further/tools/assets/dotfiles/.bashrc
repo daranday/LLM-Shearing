@@ -17,7 +17,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-conda activate /nvmefs1/daranhe/.conda/envs/default
+conda activate /nvmefs1/daranhe/.conda/envs/default || true
 
 # some more ls aliases
 alias ll='ls -alFhtr'
