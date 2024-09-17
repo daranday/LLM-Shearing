@@ -8,7 +8,7 @@ NUM_HIDDEN_LAYERS=20
 INTERMEDIATE_SIZE=4096
 MODEL_NAME=sheared-350m
 
-python3 -m llmshearing.utils.composer_to_hf save_composer_to_hf $MODEL_PATH $OUTPUT_PATH \
+echo python3 -m llmshearing.utils.composer_to_hf save_composer_to_hf $MODEL_PATH $OUTPUT_PATH \
         model_class=${MODEL_CLASS} \
         hidden_size=${HIDDEN_SIZE} \
         num_attention_heads=${NUM_ATTENTION_HEADS} \

@@ -1,5 +1,4 @@
 import math
-import warnings
 from typing import List, Optional, Tuple
 
 import torch
@@ -7,12 +6,13 @@ import torch.nn as nn
 from composer.metrics import METRIC_DEFAULT_CTORS
 from composer.metrics.nlp import LanguageCrossEntropy, LanguagePerplexity
 from composer.models.base import ComposerModel
-from composer.utils import dist, get_device, reproducibility
 from einops import rearrange
 from omegaconf import DictConfig
 from torch.nn import functional as F
-from transformers.pytorch_utils import (find_pruneable_heads_and_indices,
-                                        prune_linear_layer)
+from transformers.pytorch_utils import (
+    find_pruneable_heads_and_indices,
+    prune_linear_layer,
+)
 
 from llmshearing.models.l0_module import L0Module
 from llmshearing.models.metrics import DomainCount, DomainLanguageCrossEntropy
@@ -510,7 +510,7 @@ class LlamaAttention(nn.Module):
          
         to_prune_heads = turn_head_z(head_z, head_layer_z)
         len_to_prune_heads = len(to_prune_heads)
-        if len_to_prune_heads == 0:
+        if False and len_to_prune_heads == 0:
             print(f"    Heads: {self.n_heads} -> {self.n_heads}")
             return
 

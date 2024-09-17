@@ -39,7 +39,8 @@
                 "train_loader.persistent_workers=false",
                 "autoresume=false"
             ],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         },
         {
             "name": "Post Pruning Processing",
@@ -48,12 +49,33 @@
             "module": "llmshearing.utils.post_pruning_processing",
             "args": [
                 "prune_and_save_model",
-                "/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/zs_s3200.pt"
+                "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/latest-rank0.pt"
             ],
+            "justMyCode": false,
             "console": "integratedTerminal",
             "env": {
-                "MODEL_PATH": "/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/zs_s3200.pt"
+                "MODEL_PATH": "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/latest-rank0.pt"
             }
+        },
+        {
+            "name": "Save Composer to HF",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "llmshearing.utils.composer_to_hf",
+            "args": [
+                "save_composer_to_hf",
+                "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/pruned-ep0-ba3200-rank0.pt",
+                "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/hf-pruned-350m",
+                "model_class=LlamaForCausalLM",
+                "hidden_size=1024",
+                "num_attention_heads=16",
+                "num_hidden_layers=20",
+                "intermediate_size=4096",
+                "num_key_value_heads=16",
+                "_name_or_path=sheared-350m"
+            ],
+            "justMyCode": false,
+            "console": "integratedTerminal"
         }
     ]
 }
