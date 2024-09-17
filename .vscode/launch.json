@@ -5,24 +5,55 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Save Composer to HF",
+            "name": "Continued Pretraining",
             "type": "debugpy",
             "request": "launch",
-            "module": "llmshearing.utils.composer_to_hf",
+            "module": "composer",
             "args": [
-                "save_composer_to_hf",
-                "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/pruned-ep0-ba3200-rank0.pt",
-                "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/hf-pruned-350m",
-                "model_class=LlamaForCausalLM",
-                "hidden_size=1024",
-                "num_attention_heads=16",
-                "num_hidden_layers=20",
-                "intermediate_size=4096",
-                "num_key_value_heads=16",
-                "_name_or_path=sheared-350m"
+                "/nvmefs1/daranhe/llm-shearing/LLM-Shearing/llmshearing/train.py",
+                "/nvmefs1/daranhe/llm-shearing/LLM-Shearing/llmshearing/configs/llama2/350m.yaml",
+                "run_name=llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096_ft_with_prune_data",
+                "data_local=/nvmefs1/daranhe/llm-shearing/data/for_prune",
+                "eval_loader.dataset.split=eval_merge",
+                "global_train_batch_size=256",
+                "device_train_microbatch_size=16",
+                "device_eval_batch_size=8",
+                "max_seq_len=4096",
+                "max_duration=48000ba",
+                "eval_first=true",
+                "scheduler.t_warmup=1440ba",
+                "save_folder=/nvmefs1/daranhe/llm-shearing/out/pruning_pretrain_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096_ft_with_prune_data",
+                "loggers.wandb.init_kwargs.dir=/nvmefs1/daranhe/llm-shearing/out/pruning_pretrain_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096_ft_with_prune_data",
+                "eval_interval=400ba",
+                "save_interval=3200ba",
+                "optimizer.lr=1e-4",
+                "model.l0_module=null",
+                "model.path=/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/pruned-ep0-ba3200-rank0.pt",
+                "callbacks.data_loading.dynamic=True",
+                "callbacks.data_loading.set_names=[cc,github,book,stackexchange,wiki,arxiv,c4-rp]",
+                "callbacks.data_loading.proportion=[0.2192,0.0002,0.0791,0.0064,0.0096,0.001,0.6845]",
+                "callbacks.data_loading.update_type=doremi",
+                "callbacks.data_loading.target_loss=",
+                "train_loader.num_workers=0",
+                "train_loader.prefetch_factor=null",
+                "train_loader.persistent_workers=false",
+                "autoresume=false"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Post Pruning Processing",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "llmshearing.utils.post_pruning_processing",
+            "args": [
+                "prune_and_save_model",
+                "/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/zs_s3200.pt"
             ],
             "console": "integratedTerminal",
-            "justMyCode": false
+            "env": {
+                "MODEL_PATH": "/nvmefs1/daranhe/llm-shearing/out/test_release_pruning_full/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/zs_s3200.pt"
+            }
         }
     ]
 }
