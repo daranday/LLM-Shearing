@@ -23,6 +23,9 @@ class Runner:
         elif self.args.gpu:
             config["resources"]["slots_per_trial"] = self.args.gpu
 
+        if self.args.name is not None:
+            config["name"] = self.args.name
+
         return config
 
     def run(self):
@@ -50,6 +53,7 @@ class Runner:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Launching experiment")
+    parser.add_argument("--name", type=str, help="Experiment name")
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--gpu", type=int)
     parser.add_argument(
