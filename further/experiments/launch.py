@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import subprocess as sp
 from pathlib import Path
@@ -16,7 +17,9 @@ class Runner:
     def get_config(self):
         config = yaml.safe_load(open(SCRIPT_DIR / "default_config.yaml"))
 
-        config["entrypoint"] = f"bash python_loader.sh {' '.join(self.args.entrypoint)}"
+        config["entrypoint"] = (
+            f"bash python_loader.sh {self.args.env} {' '.join(self.args.entrypoint)}"
+        )
 
         if self.args.cpu:
             config["resources"]["slots_per_trial"] = 0
@@ -33,7 +36,7 @@ class Runner:
 
         exp = client.create_experiment(
             config=self.get_config(),
-            model_dir=".",
+            model_dir=str(SCRIPT_DIR),
             project_id=253,
         )
 
@@ -56,6 +59,7 @@ def parse_args():
     parser.add_argument("--name", type=str, help="Experiment name")
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--gpu", type=int)
+    parser.add_argument("--env", default="default", choices=["default", "evaluation"])
     parser.add_argument(
         "entrypoint", nargs=argparse.REMAINDER, help="Positional arguments after --"
     )

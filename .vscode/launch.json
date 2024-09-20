@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Continued Pretraining",
             "type": "debugpy",
@@ -50,6 +51,21 @@
             "args": [
                 "prune_and_save_model",
                 "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/latest-rank0.pt"
+            ],
+            "justMyCode": false,
+            "console": "integratedTerminal",
+            "env": {
+                "MODEL_PATH": "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/latest-rank0.pt"
+            }
+        },
+        {
+            "name": "Post Pruning Processing - 7b",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "llmshearing.utils.post_pruning_processing",
+            "args": [
+                "prune_and_save_model",
+                "/nvmefs1/daranhe/llm-shearing/out/pruning_7b_to_1.3b/llama2_7b_pruning_scaling_doremi_to1.3b_sl4096/latest-rank0.pt"
             ],
             "justMyCode": false,
             "console": "integratedTerminal",
