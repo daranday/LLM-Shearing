@@ -7,7 +7,7 @@ OUTPUT_PATH=${PROJECT_ROOT}/models/Sheared-LLaMA-1.3B-composer/state_dict.pt
 mkdir -p $(dirname $OUTPUT_PATH)
 
 # Convert the Hugging Face model to Composer key format
-# python3 -m llmshearing.utils.composer_to_hf save_hf_to_composer $HF_MODEL_NAME $OUTPUT_PATH
+python3 -m llmshearing.utils.composer_to_hf save_hf_to_composer $HF_MODEL_NAME $OUTPUT_PATH
 
 MODEL_SIZE=1.3B
 python3 -m llmshearing.utils.test_composer_hf_eq $HF_MODEL_NAME $OUTPUT_PATH $MODEL_SIZE
