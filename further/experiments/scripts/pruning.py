@@ -3,8 +3,10 @@ from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
 from data_types import NetworkDims, memory
+from dataclasses_json import dataclass_json
 
 
+@dataclass_json
 @dataclass
 class PruningConfig:
     proj_dir: str

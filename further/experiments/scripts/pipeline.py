@@ -6,10 +6,12 @@ from continued_pretraining import ContinuedPretrainingConfig, run_continued_pret
 from convert_composer_to_hf import ConvertComposerToHfConfig, convert_composer_to_hf
 from convert_hf_to_composer import ConvertHfToComposerConfig, convert_hf_to_composer
 from convert_to_pruned_model import ConvertToPrunedModelConfig
+from dataclasses_json import dataclass_json
 from evaluate_model import EvaluationConfig, evaluate_model
 from pruning import NetworkDims, PruningConfig, run_pruning
 
 
+@dataclass_json
 @dataclass
 class PipelineConfig:
     from_model_name: str  # HF name or path

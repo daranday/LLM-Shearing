@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
+from dataclasses_json import dataclass_json
 from joblib import Memory
 
 
+@dataclass_json
 @dataclass
 class NetworkDims:
     hidden_size: int = 1024

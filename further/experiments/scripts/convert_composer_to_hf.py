@@ -3,8 +3,10 @@ import subprocess
 from dataclasses import dataclass
 
 from data_types import NetworkDims
+from dataclasses_json import dataclass_json
 
 
+@dataclass_json
 @dataclass
 class ConvertComposerToHfConfig:
     model_path: str

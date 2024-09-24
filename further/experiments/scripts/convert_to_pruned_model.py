@@ -2,7 +2,10 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from dataclasses_json import dataclass_json
 
+
+@dataclass_json
 @dataclass
 class ConvertToPrunedModelConfig:
     model_path: str

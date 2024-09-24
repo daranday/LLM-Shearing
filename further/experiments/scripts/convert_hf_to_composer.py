@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from dataclasses_json import dataclass_json
 
+
+@dataclass_json
 @dataclass
 class ConvertHfToComposerConfig:
     project_root: str  # eg. "/nvmefs1/daranhe/llm-shearing"
