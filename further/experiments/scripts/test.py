@@ -7,9 +7,6 @@ from evaluate_model import evaluate_model
 from pipeline import PipelineConfig, run_pipeline
 from pruning import run_pruning
 
-# NOTE:
-#   The steps are:
-
 
 @pytest.fixture
 def pipeline_config():
@@ -56,7 +53,7 @@ def test_convert_continued_pretraining_to_hf(pipeline_config: PipelineConfig):
     convert_composer_to_hf(pipeline_config.continued_pretraining_to_hf_config)
 
 
-# evaluations
+# # evaluations
 
 
 def test_evaluate_from_model(pipeline_config: PipelineConfig):

@@ -44,6 +44,9 @@ class Runner:
 
         print("Experiment started at {}".format(exp_url))
 
+        if self.args.detached:
+            return
+
         try:
             sp.run(["det", "e", "logs", str(exp.id), "-f"], cwd=SCRIPT_DIR)
         except KeyboardInterrupt:
@@ -56,7 +59,8 @@ class Runner:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Launching experiment")
-    parser.add_argument("--name", type=str, help="Experiment name")
+    parser.add_argument("--name", type=str, required=True, help="Experiment name")
+    parser.add_argument("--detached", action="store_true")
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--gpu", type=int)
     parser.add_argument("--env", default="default", choices=["default", "evaluation"])

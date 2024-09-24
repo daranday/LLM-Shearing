@@ -1,3 +1,5 @@
+import os
+import subprocess
 from dataclasses import dataclass
 
 from data_types import NetworkDims
@@ -5,22 +7,27 @@ from data_types import NetworkDims
 
 @dataclass
 class ConvertComposerToHfConfig:
-    model_dir: str
-    output_path: str
+    model_path: str
+    model_name: str
+    output_path: str | None = None
     model_class: str = "LlamaForCausalLM"
     network_dims: NetworkDims = NetworkDims()
-    model_name: str = "sheared-350m"
+
+    def __post_init__(self):
+        assert self.model_path.endswith(".pt")
+        model_dir = os.path.dirname(self.model_path)
+        if self.output_path is None:
+            self.output_path = f"{model_dir}/hf-{self.model_name}"
 
 
 def convert_composer_to_hf(config: ConvertComposerToHfConfig):
-    model_path = f"{config.model_dir}/pruned-latest-rank0.pt"
 
     command = [
         "python3",
         "-m",
         "llmshearing.utils.composer_to_hf",
         "save_composer_to_hf",
-        model_path,
+        config.model_path,
         config.output_path,
         f"model_class={config.model_class}",
         f"hidden_size={config.network_dims.hidden_size}",
@@ -32,7 +39,7 @@ def convert_composer_to_hf(config: ConvertComposerToHfConfig):
     ]
 
     print(" ".join(command))
-    # subprocess.run(command, check=True)
+    subprocess.run(command, check=True)
 
 
 if __name__ == "__main__":

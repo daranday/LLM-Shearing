@@ -3,10 +3,10 @@ from dataclasses import dataclass, field
 from typing import Any, Dict
 
 from continued_pretraining import ContinuedPretrainingConfig, run_continued_pretraining
-from convert_composer_to_hf import ConvertComposerToHfConfig
+from convert_composer_to_hf import ConvertComposerToHfConfig, convert_composer_to_hf
 from convert_hf_to_composer import ConvertHfToComposerConfig, convert_hf_to_composer
 from convert_to_pruned_model import ConvertToPrunedModelConfig
-from evaluate_model import EvaluationConfig
+from evaluate_model import EvaluationConfig, evaluate_model
 from pruning import NetworkDims, PruningConfig, run_pruning
 
 
@@ -116,11 +116,17 @@ class PipelineConfig:
             **self.get_overrides("continued_pretraining"),
         )
 
-        # self.pruned_to_hf_config = ConvertComposerToHfConfig(
-        #     model_dir=self.continued_pretraining_config.save_dir,
-        #     network_dims=self.to_model_dims,
-        #     model_name=f"sheared-{self.to_model_size}",
-        # )
+        self.pruned_to_hf_config = ConvertComposerToHfConfig(
+            model_path=f"{self.pruning_config.save_dir}/pruned-latest-rank0.pt",
+            model_name=f"hf-pruned-{self.to_model_size}",
+            network_dims=self.to_model_dims,
+        )
+
+        self.continued_pretraining_to_hf_config = ConvertComposerToHfConfig(
+            model_path=f"{self.continued_pretraining_config.save_dir}/latest-rank0.pt",
+            model_name=f"hf-continued-pretrained-{self.to_model_size}",
+            network_dims=self.to_model_dims,
+        )
 
     def get_overrides(self, prefix: str):
         return {
@@ -137,32 +143,31 @@ def run_pipeline(config: PipelineConfig):
 
     # Step 2: Run pruning
     print("Step 2: Running pruning")
-    pruning_config = PruningConfig(config.pruning_config)
-    run_pruning(pruning_config)
+    run_pruning(config.pruning_config)
 
     # Step 3: Run continued pretraining
     print("Step 3: Running continued pretraining")
     run_continued_pretraining(config.continued_pretraining_config)
 
-    # # Step 4: Convert pruning result Composer model to HF
-    # print("Step 4: Converting pruning result to HF format")
-    # convert_composer_to_hf(config.pruned_to_hf_config)
+    # Step 4: Convert pruning result Composer model to HF
+    print("Step 4: Converting pruning result to HF format")
+    convert_composer_to_hf(config.pruned_to_hf_config)
 
-    # # Step 5: Convert continued pretraining result Composer model to HF
-    # print("Step 5: Converting continued pretraining result to HF format")
-    # convert_composer_to_hf(config.continued_pretraining_to_hf_config)
+    # Step 5: Convert continued pretraining result Composer model to HF
+    print("Step 5: Converting continued pretraining result to HF format")
+    convert_composer_to_hf(config.continued_pretraining_to_hf_config)
 
-    # # Step 6: Evaluate HF original from_model
-    # print("Step 6: Evaluating original HF model")
-    # evaluate_model(config.from_model_eval_config)
+    # Step 6: Evaluate HF original from_model
+    print("Step 6: Evaluating original HF model")
+    evaluate_model(config.from_model_eval_config)
 
-    # # Step 7: Evaluate HF pruning result model
-    # print("Step 7: Evaluating pruning result model")
-    # evaluate_model(config.pruning_eval_config)
+    # Step 7: Evaluate HF pruning result model
+    print("Step 7: Evaluating pruning result model")
+    evaluate_model(config.pruning_eval_config)
 
-    # # Step 8: Evaluate HF continued pretraining result model
-    # print("Step 8: Evaluating continued pretraining result model")
-    # evaluate_model(config.continued_pretraining_eval_config)
+    # Step 8: Evaluate HF continued pretraining result model
+    print("Step 8: Evaluating continued pretraining result model")
+    evaluate_model(config.continued_pretraining_eval_config)
 
 
 if __name__ == "__main__":
