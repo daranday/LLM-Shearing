@@ -130,7 +130,7 @@ callbacks:
 
 loggers:
   wandb: 
-    project: pruning-from-7b-to-1.3b
+    project: pruning-from-7b
     entity: esmoq-
     name: ${run_name}
     init_kwargs:
