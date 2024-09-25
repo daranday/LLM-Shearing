@@ -58,7 +58,8 @@ def launch_workflow(
                 dispatch_script,
                 func.__name__,
                 config_json_arg,
-            ]
+            ],
+            check=True,
         )
 
     return wrapper
@@ -87,14 +88,14 @@ def run_workflow(name: str, params_dict_arg_encoded: str):
 def run_pipeline_async(exp_name: str, config: PipelineConfig):
 
     # Step 1: Convert from_model HF to Composer
-    print("Step 1: Converting HF model to Composer format")
-    launch_workflow(convert_hf_to_composer, group=exp_name, gpu=2)(
-        config.hf_to_composer_config
-    )
+    # print("Step 1: Converting HF model to Composer format")
+    # launch_workflow(convert_hf_to_composer, group=exp_name, gpu=2)(
+    #     config.hf_to_composer_config
+    # )
 
-    # Step 2: Run pruning
-    print("Step 2: Running pruning")
-    launch_workflow(run_pruning, group=exp_name, gpu=4)(config.pruning_config)
+    # # Step 2: Run pruning
+    # print("Step 2: Running pruning")
+    # launch_workflow(run_pruning, group=exp_name, gpu=4)(config.pruning_config)
 
     # Step 2.5: Convert to pruned model
     print("Step 2.5: Convert to pruned model")

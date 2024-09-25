@@ -2,6 +2,7 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
+from data_types import job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -59,6 +60,7 @@ def to_list_str(lst: List[Any]):
     return f"[{','.join(map(str, lst))}]"
 
 
+@job_memory.cache
 def run_continued_pretraining(config: ContinuedPretrainingConfig):
     train_script = f"{config.proj_dir}/LLM-Shearing/llmshearing/train.py"
     config_file = f"{config.proj_dir}/LLM-Shearing/llmshearing/configs/llama2/{config.to_model}.yaml"

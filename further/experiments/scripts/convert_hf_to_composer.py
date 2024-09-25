@@ -1,9 +1,9 @@
 import os
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
+from data_types import job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -22,35 +22,34 @@ class ConvertHfToComposerConfig:
             self.output_path = f"{self.project_root}/models/Sheared-LLaMA-{self.model_size}-composer/state_dict.pt"
 
 
+@job_memory.cache
 def convert_hf_to_composer(config: ConvertHfToComposerConfig) -> None:
     # Create the necessary directory if it doesn't exist
     os.makedirs(os.path.dirname(config.output_path), exist_ok=True)
 
     # Convert the Hugging Face model to Composer key format
-    subprocess.run(
-        [
-            "python3",
-            "-m",
-            "llmshearing.utils.composer_to_hf",
-            "save_hf_to_composer",
-            config.hf_model_name,
-            config.output_path,
-        ]
-    )
-
-    assert Path(config.output_path).exists()
+    command = [
+        "python3",
+        "-m",
+        "llmshearing.utils.composer_to_hf",
+        "save_hf_to_composer",
+        config.hf_model_name,
+        config.output_path,
+    ]
+    print(" ".join(command))
+    subprocess.run(command, check=True)
 
     # Test the conversion
-    subprocess.run(
-        [
-            "python3",
-            "-m",
-            "llmshearing.utils.test_composer_hf_eq",
-            config.hf_model_name,
-            config.output_path,
-            config.model_size,
-        ]
-    )
+    command = [
+        "python3",
+        "-m",
+        "llmshearing.utils.test_composer_hf_eq",
+        config.hf_model_name,
+        config.output_path,
+        config.model_size,
+    ]
+    print(" ".join(command))
+    subprocess.run(command, check=True)
 
 
 if __name__ == "__main__":

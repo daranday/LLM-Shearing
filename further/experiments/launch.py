@@ -4,7 +4,7 @@ import subprocess as sp
 from pathlib import Path
 
 import yaml
-from determined.common.experimental import Determined
+from determined.common.experimental import Determined, experiment
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
@@ -49,6 +49,11 @@ class Runner:
 
         try:
             sp.run(["det", "e", "logs", str(exp.id), "-f"], cwd=SCRIPT_DIR)
+            state = exp.wait()
+            print(f"Experiment {exp.id} completed with state {state}")
+            assert state in experiment.TERMINAL_STATES, state
+            if state != experiment.ExperimentState.COMPLETED:
+                exit(1)
         except KeyboardInterrupt:
             to_kill_response = input("Kill experiment? [y/N]: ")
             to_kill = "y" in to_kill_response.lower()

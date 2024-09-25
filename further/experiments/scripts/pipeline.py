@@ -4,11 +4,11 @@ from typing import Any, Dict
 
 from continued_pretraining import ContinuedPretrainingConfig, run_continued_pretraining
 from convert_composer_to_hf import ConvertComposerToHfConfig, convert_composer_to_hf
-from convert_hf_to_composer import ConvertHfToComposerConfig, convert_hf_to_composer
-from convert_to_pruned_model import ConvertToPrunedModelConfig
+from convert_hf_to_composer import ConvertHfToComposerConfig
+from convert_to_pruned_model import ConvertToPrunedModelConfig, prune_and_convert_model
 from dataclasses_json import dataclass_json
 from evaluate_model import EvaluationConfig, evaluate_model
-from pruning import NetworkDims, PruningConfig, run_pruning
+from pruning import NetworkDims, PruningConfig
 
 
 @dataclass_json
@@ -140,12 +140,16 @@ class PipelineConfig:
 
 def run_pipeline(config: PipelineConfig):
     # Step 1: Convert from_model HF to Composer
-    print("Step 1: Converting HF model to Composer format")
-    convert_hf_to_composer(config.hf_to_composer_config)
+    # print("Step 1: Converting HF model to Composer format")
+    # convert_hf_to_composer(config.hf_to_composer_config)
 
-    # Step 2: Run pruning
-    print("Step 2: Running pruning")
-    run_pruning(config.pruning_config)
+    # # Step 2: Run pruning
+    # print("Step 2: Running pruning")
+    # run_pruning(config.pruning_config)
+
+    # Step 2.5: Convert to pruned model
+    print("Step 2.5: Converting to pruned model")
+    prune_and_convert_model(config.convert_to_pruned_config)
 
     # Step 3: Run continued pretraining
     print("Step 3: Running continued pretraining")

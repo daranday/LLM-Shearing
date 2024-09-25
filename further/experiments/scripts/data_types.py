@@ -13,4 +13,6 @@ class NetworkDims:
     intermediate_size: int = 4096
 
 
-memory = Memory(location="/nvmefs1/daranhe/llm-shearing/out/joblib_cache", verbose=0)
+job_memory = Memory(
+    location="/nvmefs1/daranhe/llm-shearing/out/joblib_cache", verbose=0
+)

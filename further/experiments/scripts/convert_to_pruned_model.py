@@ -2,6 +2,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from data_types import job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -18,6 +19,7 @@ class ConvertToPrunedModelConfig:
             self.output_path = str(p.parent / f"pruned-{p.name}")
 
 
+@job_memory.cache
 def prune_and_convert_model(config: ConvertToPrunedModelConfig):
     command = [
         "python3",
@@ -27,6 +29,7 @@ def prune_and_convert_model(config: ConvertToPrunedModelConfig):
         config.model_path,
     ]
 
+    print(" ".join(command))
     subprocess.run(command, check=True)
 
     assert Path(config.output_path).exists()

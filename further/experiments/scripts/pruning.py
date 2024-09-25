@@ -2,7 +2,7 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
-from data_types import NetworkDims, memory
+from data_types import NetworkDims, job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -62,7 +62,7 @@ def to_list_str(lst: List[Any]):
     return f"[{','.join(map(str, lst))}]"
 
 
-@memory.cache
+@job_memory.cache
 def run_pruning(config: PruningConfig):
     # Set up paths
     train_script = f"{config.proj_dir}/LLM-Shearing/llmshearing/train.py"

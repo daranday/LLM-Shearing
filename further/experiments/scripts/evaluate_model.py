@@ -2,6 +2,7 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import List
 
+from data_types import job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -17,6 +18,7 @@ class EvaluationConfig:
     trust_remote_code: bool = True
 
 
+@job_memory.cache
 def evaluate_model(config: EvaluationConfig):
     python_bin: str = "/nvmefs1/daranhe/.conda/envs/evaluation/bin/python"
 
