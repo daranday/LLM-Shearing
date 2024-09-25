@@ -12,6 +12,7 @@ from convert_hf_to_composer import ConvertHfToComposerConfig, convert_hf_to_comp
 from convert_to_pruned_model import ConvertToPrunedModelConfig, prune_and_convert_model
 from dataclasses_json import dataclass_json
 from evaluate_model import EvaluationConfig, evaluate_model
+from pipeline import PipelineConfig
 from pruning import PruningConfig, run_pruning
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -28,7 +29,9 @@ def dummy(config: DummyConfig):
     print(config)
 
 
-def launch_workflow(func: Callable, group: str, cpu: bool = False, gpu: int = 0):
+def launch_workflow(
+    func: Callable, group: str, cpu: bool = False, gpu: int = 0, detached: bool = False
+):
     @wraps(func)
     def wrapper(*args):
         print(f"Launching workflow: {func.__name__}")
@@ -43,6 +46,8 @@ def launch_workflow(func: Callable, group: str, cpu: bool = False, gpu: int = 0)
             env_args.append(f"--cpu")
         if gpu:
             env_args.append(f"--gpu={gpu}")
+        if detached:
+            env_args.append("--detached")
         subprocess.run(
             [
                 "python",
@@ -77,6 +82,61 @@ def run_workflow(name: str, params_dict_arg_encoded: str):
         dummy(DummyConfig.from_json(params_dict_arg))
     else:
         raise ValueError(f"Unsupported workflow name: {name}")
+
+
+def run_pipeline_async(exp_name: str, config: PipelineConfig):
+
+    # Step 1: Convert from_model HF to Composer
+    print("Step 1: Converting HF model to Composer format")
+    launch_workflow(convert_hf_to_composer, group=exp_name, gpu=2)(
+        config.hf_to_composer_config
+    )
+
+    # Step 2: Run pruning
+    print("Step 2: Running pruning")
+    launch_workflow(run_pruning, group=exp_name, gpu=4)(config.pruning_config)
+
+    # Step 2.5: Convert to pruned model
+    print("Step 2.5: Convert to pruned model")
+    launch_workflow(prune_and_convert_model, group=exp_name, gpu=2)(
+        config.convert_to_pruned_config
+    )
+
+    # Step 3: Run continued pretraining
+    print("Step 3: Running continued pretraining")
+    launch_workflow(run_continued_pretraining, group=exp_name, gpu=4)(
+        config.continued_pretraining_config
+    )
+
+    # Step 4: Convert pruning result Composer model to HF
+    print("Step 4: Converting pruning result to HF format")
+    launch_workflow(convert_composer_to_hf, group=exp_name, gpu=2)(
+        config.pruned_to_hf_config
+    )
+
+    # Step 5: Convert continued pretraining result Composer model to HF
+    print("Step 5: Converting continued pretraining result to HF format")
+    launch_workflow(convert_composer_to_hf, group=exp_name, gpu=2)(
+        config.continued_pretraining_to_hf_config
+    )
+
+    # Step 6: Evaluate HF original from_model
+    print("Step 6: Evaluating original HF model")
+    launch_workflow(evaluate_model, group=exp_name, gpu=4, detached=True)(
+        config.from_model_eval_config
+    )
+
+    # Step 7: Evaluate HF pruning result model
+    print("Step 7: Evaluating pruning result model")
+    launch_workflow(evaluate_model, group=exp_name, gpu=4, detached=True)(
+        config.pruning_eval_config
+    )
+
+    # Step 8: Evaluate HF continued pretraining result model
+    print("Step 8: Evaluating continued pretraining result model")
+    launch_workflow(evaluate_model, group=exp_name, gpu=4, detached=True)(
+        config.continued_pretraining_eval_config
+    )
 
 
 if __name__ == "__main__":

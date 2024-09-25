@@ -1,4 +1,5 @@
 from dispatch import DummyConfig, dummy, launch_workflow
 
-if __name__ == "__main__":
+
+def test_dummy():
     launch_workflow(dummy, group="test", cpu=True)(DummyConfig())
