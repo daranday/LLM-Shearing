@@ -11,7 +11,7 @@ from dataclasses_json import dataclass_json
 class ConvertComposerToHfConfig:
     model_path: str
     model_name: str
-    output_path: str | None = None
+    output_path: str = None  # type: ignore
     model_class: str = "LlamaForCausalLM"
     network_dims: NetworkDims = NetworkDims()
 
@@ -22,7 +22,6 @@ class ConvertComposerToHfConfig:
             self.output_path = f"{model_dir}/hf-{self.model_name}"
 
 
-@job_memory.cache
 def convert_composer_to_hf(config: ConvertComposerToHfConfig):
 
     command = [
@@ -43,20 +42,3 @@ def convert_composer_to_hf(config: ConvertComposerToHfConfig):
 
     print(" ".join(command))
     subprocess.run(command, check=True)
-
-
-if __name__ == "__main__":
-
-    # Example usage:
-    convert_composer_to_hf(
-        ConvertComposerToHfConfig(
-            model_dir="/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096",
-            output_path="/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/hf-pruned-350m",
-            network_dims=NetworkDims(
-                hidden_size=1024,
-                num_attention_heads=16,
-                num_hidden_layers=20,
-                intermediate_size=4096,
-            ),
-        )
-    )

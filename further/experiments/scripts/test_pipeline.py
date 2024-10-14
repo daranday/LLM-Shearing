@@ -1,10 +1,12 @@
+import os
+
 import pytest
 from continued_pretraining import run_continued_pretraining
 from convert_composer_to_hf import convert_composer_to_hf
 from convert_hf_to_composer import convert_hf_to_composer
 from convert_to_pruned_model import prune_and_convert_model
 from evaluate_model import evaluate_model
-from pipeline import PipelineConfig, run_pipeline
+from pipeline import PipelineConfig, run_pipeline, send_pushover_notification
 from pruning import run_pruning
 
 
@@ -70,3 +72,15 @@ def test_evaluate_continued_pretraining_model(pipeline_config: PipelineConfig):
 
 def test_full_pipeline(pipeline_config: PipelineConfig):
     run_pipeline(pipeline_config)
+
+
+def test_notify():
+
+    user_key, api_token = os.getenv("PUSHOVER_USER_KEY"), os.getenv(
+        "PUSHOVER_API_TOKEN"
+    )
+
+    assert user_key, "PUSHOVER_USER_KEY is not set"
+    assert api_token, "PUSHOVER_API_TOKEN is not set"
+
+    send_pushover_notification(user_key, api_token, f"Test test")

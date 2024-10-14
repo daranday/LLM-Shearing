@@ -1,14 +1,17 @@
-import argparse
+import atexit
+import os
+import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
+import requests
 from continued_pretraining import ContinuedPretrainingConfig, run_continued_pretraining
 from convert_composer_to_hf import ConvertComposerToHfConfig, convert_composer_to_hf
-from convert_hf_to_composer import ConvertHfToComposerConfig
+from convert_hf_to_composer import ConvertHfToComposerConfig, convert_hf_to_composer
 from convert_to_pruned_model import ConvertToPrunedModelConfig, prune_and_convert_model
 from dataclasses_json import dataclass_json
 from evaluate_model import EvaluationConfig, evaluate_model
-from pruning import NetworkDims, PruningConfig
+from pruning import NetworkDims, PruningConfig, run_pruning
 
 
 @dataclass_json
@@ -23,16 +26,16 @@ class PipelineConfig:
     project_output_dir: str | None = None
     to_model_dims: NetworkDims | None = None
 
-    hf_to_composer_config: ConvertHfToComposerConfig | None = None
-    pruning_config: PruningConfig | None = None
-    convert_to_pruned_config: ConvertToPrunedModelConfig | None = None
-    continued_pretraining_config: ContinuedPretrainingConfig | None = None
+    hf_to_composer_config: ConvertHfToComposerConfig = field(init=False)
+    pruning_config: PruningConfig = field(init=False)
+    convert_to_pruned_config: ConvertToPrunedModelConfig = field(init=False)
+    continued_pretraining_config: ContinuedPretrainingConfig = field(init=False)
 
-    pruned_to_hf_config: ConvertComposerToHfConfig | None = None
-    continued_pretraining_to_hf_config: ConvertComposerToHfConfig | None = None
-    from_model_eval_config: EvaluationConfig | None = None
-    pruning_eval_config: EvaluationConfig | None = None
-    continued_pretraining_eval_config: EvaluationConfig | None = None
+    pruned_to_hf_config: ConvertComposerToHfConfig = field(init=False)
+    continued_pretraining_to_hf_config: ConvertComposerToHfConfig = field(init=False)
+    from_model_eval_config: EvaluationConfig = field(init=False)
+    pruning_eval_config: EvaluationConfig = field(init=False)
+    continued_pretraining_eval_config: EvaluationConfig = field(init=False)
 
     overrides: Dict[str, Any] = field(default_factory=dict)
 
@@ -84,7 +87,7 @@ class PipelineConfig:
                     intermediate_size=4096,
                 )
             else:
-                raise ValueError(f"Unsupported to_model_size: {config.to_model_size}")
+                raise ValueError(f"Unsupported to_model_size: {self.to_model_size}")
 
         self.hf_to_composer_config = ConvertHfToComposerConfig(
             project_root=self.project_root,
@@ -130,6 +133,21 @@ class PipelineConfig:
             network_dims=self.to_model_dims,
         )
 
+        self.from_model_eval_config = EvaluationConfig(
+            model=self.from_model_name,
+            **self.get_overrides("from_model_eval"),
+        )
+
+        self.pruning_eval_config = EvaluationConfig(
+            model=self.pruned_to_hf_config.output_path,
+            **self.get_overrides("pruning_eval"),
+        )
+
+        self.continued_pretraining_eval_config = EvaluationConfig(
+            model=self.pruned_to_hf_config.output_path,
+            **self.get_overrides("continued_pretraining_eval"),
+        )
+
     def get_overrides(self, prefix: str):
         return {
             k[len(prefix) + 1 :]: v
@@ -140,12 +158,12 @@ class PipelineConfig:
 
 def run_pipeline(config: PipelineConfig):
     # Step 1: Convert from_model HF to Composer
-    # print("Step 1: Converting HF model to Composer format")
-    # convert_hf_to_composer(config.hf_to_composer_config)
+    print("Step 1: Converting HF model to Composer format")
+    convert_hf_to_composer(config.hf_to_composer_config)
 
-    # # Step 2: Run pruning
-    # print("Step 2: Running pruning")
-    # run_pruning(config.pruning_config)
+    # Step 2: Run pruning
+    print("Step 2: Running pruning")
+    run_pruning(config.pruning_config)
 
     # Step 2.5: Convert to pruned model
     print("Step 2.5: Converting to pruned model")
@@ -176,69 +194,52 @@ def run_pipeline(config: PipelineConfig):
     evaluate_model(config.continued_pretraining_eval_config)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="End-to-end pipeline for model pruning and continued pretraining"
-    )
-    parser.add_argument(
-        "--project_root", type=str, required=True, help="Root directory of the project"
-    )
-    parser.add_argument(
-        "--from_model", type=str, required=True, help="Name of the source model"
-    )
-    parser.add_argument(
-        "--from_model_size", type=str, required=True, help="Size of the source model"
-    )
-    parser.add_argument(
-        "--to_model_size", type=str, required=True, help="Size of the target model"
-    )
-    parser.add_argument(
-        "--hf_model_name", type=str, required=True, help="Hugging Face model name"
-    )
-    parser.add_argument(
-        "--data_dir", type=str, required=True, help="Directory containing the dataset"
-    )
-    parser.add_argument(
-        "--output_dir", type=str, required=True, help="Directory to save output files"
-    )
-    parser.add_argument(
-        "--hidden_size", type=int, required=True, help="Hidden size of the target model"
-    )
-    parser.add_argument(
-        "--num_attention_heads",
-        type=int,
-        required=True,
-        help="Number of attention heads of the target model",
-    )
-    parser.add_argument(
-        "--num_hidden_layers",
-        type=int,
-        required=True,
-        help="Number of hidden layers of the target model",
-    )
-    parser.add_argument(
-        "--intermediate_size",
-        type=int,
-        required=True,
-        help="Intermediate size of the target model",
+def send_pushover_notification(user_key, api_token, message, title="MLDS Job Status"):
+    """
+    Send a Pushover notification.
+
+    :param user_key: Your Pushover user key
+    :param api_token: Your Pushover application's API token
+    :param message: The message to send
+    :param title: The title of the notification (default: "Job Status")
+    :return: True if the notification was sent successfully, False otherwise
+    """
+    url = "https://api.pushover.net/1/messages.json"
+    data = {"token": api_token, "user": user_key, "title": title, "message": message}
+
+    response = requests.post(url, data=data)
+
+    if response.status_code == 200:
+        print("Notification sent successfully")
+        return True
+    else:
+        print(f"Failed to send notification. Status code: {response.status_code}")
+        return False
+
+
+def exit_handler(user_key, api_token, job_name):
+    exit_code = sys.exc_info()[1]
+    if exit_code is None:
+        status = "completed successfully"
+    else:
+        status = f"failed with exit code {exit_code}"
+
+    message = f"Your job {job_name} has {status}."
+    send_pushover_notification(user_key, api_token, message)
+
+
+def register_exit_handler(job_name: str):
+    """
+    Register the exit handler to send a notification when the script exits.
+    """
+
+    user_key, api_token = os.getenv("PUSHOVER_USER_KEY"), os.getenv(
+        "PUSHOVER_API_TOKEN"
     )
 
-    args = parser.parse_args()
+    assert user_key, "PUSHOVER_USER_KEY is not set"
+    assert api_token, "PUSHOVER_API_TOKEN is not set"
 
-    config = PipelineConfig(
-        project_root=args.project_root,
-        from_model=args.from_model,
-        from_model_size=args.from_model_size,
-        to_model_size=args.to_model_size,
-        to_model_network_dims=NetworkDims(
-            hidden_size=args.hidden_size,
-            num_attention_heads=args.num_attention_heads,
-            num_hidden_layers=args.num_hidden_layers,
-            intermediate_size=args.intermediate_size,
-        ),
-        hf_model_name=args.hf_model_name,
-        data_dir=args.data_dir,
-        output_dir=args.output_dir,
-    )
+    send_pushover_notification(user_key, api_token, f"Starting job {job_name}")
 
-    run_pipeline(config)
+    atexit.register(exit_handler, user_key, api_token, job_name)

@@ -10,7 +10,7 @@ from dataclasses_json import dataclass_json
 @dataclass
 class ConvertToPrunedModelConfig:
     model_path: str
-    output_path: str | None = None
+    output_path: str = None  # type: ignore
 
     def __post_init__(self):
         assert self.model_path.endswith(".pt")
@@ -33,9 +33,3 @@ def prune_and_convert_model(config: ConvertToPrunedModelConfig):
     subprocess.run(command, check=True)
 
     assert Path(config.output_path).exists()
-
-
-# Example usage
-if __name__ == "__main__":
-    MODEL_PATH = "/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/latest-rank0.pt"
-    prune_and_convert_model(MODEL_PATH)

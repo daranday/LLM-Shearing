@@ -3,6 +3,8 @@ export PATH=/run/determined/pythonuserbase/bin:/opt/conda/bin:/usr/local/nvidia/
 export PATH="/nvmefs1/daranhe/llm-shearing/LLM-Shearing/further/experiments:$PATH"
 export DET_MASTER=10.182.1.43
 export WANDB_API_KEY=92810afd9a447f2db34620b41937735ccd1cc935
+export PUSHOVER_USER_KEY=up1igfmifg1tczyhu5wmfgm2csmj12
+export PUSHOVER_API_TOKEN=atayu7j48yscrmnvnujhg32kx24zm6
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!

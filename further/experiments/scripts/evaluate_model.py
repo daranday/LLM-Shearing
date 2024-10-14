@@ -36,11 +36,14 @@ def evaluate_model(config: EvaluationConfig):
         config.device,
         "--batch_size",
         str(config.batch_size),
+        "--output_path",
+        f"{config.model}.json",
     ]
 
     if config.trust_remote_code:
         command.append("--trust_remote_code")
 
+    print(" ".join(command))
     subprocess.run(command)
 
 

@@ -2,7 +2,6 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
-from data_types import job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -22,7 +21,7 @@ class ContinuedPretrainingConfig:
     device_eval_batch_size: int = 8
     lr: float = 1e-4
     max_duration: str = "48000ba"
-    save_interval: str = "3200ba"
+    save_interval: str = "1800ba"
     t_warmup: str = "1440ba"
     dynamic: bool = True
     set_names: List[str] = field(
@@ -43,7 +42,7 @@ class ContinuedPretrainingConfig:
     target_loss: Optional[List[float]] = None
     eval_split_name: str = "eval_merge"
     eval_interval: str = "400ba"
-    save_dir: str | None = None
+    save_dir: str = None  # type: ignore
 
     def __post_init__(self):
         if self.output_dir is None:
@@ -60,7 +59,7 @@ def to_list_str(lst: List[Any]):
     return f"[{','.join(map(str, lst))}]"
 
 
-@job_memory.cache
+# @job_memory.cache
 def run_continued_pretraining(config: ContinuedPretrainingConfig):
     train_script = f"{config.proj_dir}/LLM-Shearing/llmshearing/train.py"
     config_file = f"{config.proj_dir}/LLM-Shearing/llmshearing/configs/llama2/{config.to_model}.yaml"
@@ -91,6 +90,9 @@ def run_continued_pretraining(config: ContinuedPretrainingConfig):
         elif config.to_model in ["370m", "350m"]:
             config.target_loss = [2.1401, 0.8694, 2.3625, 1.7791, 2.047, 1.6637, 2.3139]
 
+    assert config.target_loss is not None
+    assert config.save_dir is not None
+
     cmd = [
         "python",
         "-m",
@@ -109,6 +111,7 @@ def run_continued_pretraining(config: ContinuedPretrainingConfig):
         f"scheduler.t_warmup={config.t_warmup}",
         f"save_folder={config.save_dir}",
         f"loggers.wandb.init_kwargs.dir={wandb_dir}",
+        f"loggers.wandb.project=pruning-from-{config.from_model}",
         f"eval_interval={config.eval_interval}",
         f"save_interval={config.save_interval}",
         f"optimizer.lr={config.lr}",
@@ -127,18 +130,3 @@ def run_continued_pretraining(config: ContinuedPretrainingConfig):
 
     print(" ".join(cmd))
     subprocess.run(cmd, check=True)
-
-
-# Example usage:
-if __name__ == "__main__":
-    run_continued_pretraining(
-        ContinuedPretrainingConfig(
-            proj_dir="/nvmefs1/daranhe/llm-shearing",
-            data_dir="/nvmefs1/daranhe/llm-shearing/data/for_prune",
-            output_dir="/nvmefs1/daranhe/llm-shearing/out/pruning_pretrain_from_1.3b_to_350m",
-            train_script="/nvmefs1/daranhe/llm-shearing/LLM-Shearing/llmshearing/train.py",
-            from_model="1.3b-sheared",
-            to_model="350m",
-            pruned_model_path="/nvmefs1/daranhe/llm-shearing/out/pruning_from_1.3b_to_350m/llama2_1.3b-sheared_pruning_scaling_doremi_to350m_sl4096/pruned-ep0-ba3200-rank0.pt",
-        )
-    )

@@ -1,7 +1,6 @@
 import os
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
 
 from data_types import job_memory
 from dataclasses_json import dataclass_json
@@ -13,7 +12,7 @@ class ConvertHfToComposerConfig:
     project_root: str  # eg. "/nvmefs1/daranhe/llm-shearing"
     hf_model_name: str  # eg. "princeton-nlp/Sheared-LLaMA-1.3B"
     model_size: str  # eg. "1.3b"
-    output_path: Optional[str] = None
+    output_path: str = None  # type: ignore
 
     def __post_init__(self):
         if self.model_size and self.model_size[0].isnumeric():
@@ -50,45 +49,3 @@ def convert_hf_to_composer(config: ConvertHfToComposerConfig) -> None:
     ]
     print(" ".join(command))
     subprocess.run(command, check=True)
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Convert Hugging Face model to Composer format"
-    )
-    parser.add_argument(
-        "--project_root",
-        type=str,
-        default="/nvmefs1/daranhe/llm-shearing",
-        help="Root directory of the project",
-    )
-    parser.add_argument(
-        "--hf_model_name",
-        type=str,
-        default="princeton-nlp/Sheared-LLaMA-1.3B",
-        required=True,
-        help="Name of the Hugging Face model to convert",
-    )
-    parser.add_argument(
-        "--model_size",
-        type=str,
-        required=True,
-        default="1.3B",
-        help="Size of the model",
-    )
-    parser.add_argument(
-        "--output_path", type=str, help="Path to save the converted model"
-    )
-
-    args = parser.parse_args()
-
-    config = ConvertHfToComposerConfig(
-        project_root=args.project_root,
-        hf_model_name=args.hf_model_name,
-        model_size=args.model_size,
-        output_path=args.output_path,
-    )
-
-    convert_hf_to_composer(config)
