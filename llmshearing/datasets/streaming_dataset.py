@@ -335,8 +335,9 @@ class DynamicStreamingDataset(StreamingDataset):
 
         # Do expensive work that may use a lot of cores/memory just once, in the local leader.
         if world.is_local_leader:
+            sample_ids_per_stream = generate_work(self, world, epoch, used_domain_ids)
             # TODO: Fix why this is not working for epoch > 0
-            sample_ids_per_stream = generate_work(self, world, epoch=0, used_domain_ids=used_domain_ids)
+            # sample_ids_per_stream = generate_work(self, world, epoch=0, used_domain_ids=used_domain_ids)
             shape_shms, data_shms = self._share_work(sample_ids_per_stream)
             self._shared_barrier(world.workers_per_node)
         else:
