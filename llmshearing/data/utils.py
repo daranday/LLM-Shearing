@@ -14,9 +14,9 @@ def calculate_npy_size(shape, dtype):
     return np.prod(shape)
 
 
-def get_total_npy_size(directory):
+def get_total_npy_size(path_gen):
     total_size = 0
-    for npy_file in directory.rglob("*.npy"):
+    for npy_file in path_gen:
         shape, dtype = get_npy_shape_and_dtype(npy_file)
         total_size += calculate_npy_size(shape, dtype)
     return total_size

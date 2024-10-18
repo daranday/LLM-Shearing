@@ -49,6 +49,7 @@ def validate_single_dataset(dataset_path: Path, sample_size: int = 1000) -> Dict
     total_sequences = len(dataset)
 
     # Sparse sampling
+    random.seed(42)
     sampled_indices = random.sample(
         range(total_sequences), min(sample_size, total_sequences)
     )
