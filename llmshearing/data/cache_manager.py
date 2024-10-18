@@ -12,7 +12,6 @@ memory = Memory(location=cache_dir, verbose=0)
 
 def get_cache_data():
     data = []
-    cache_dir = memory.location
     for root, dirs, files in os.walk(cache_dir):
         for dir in dirs:
             if dir != "func_code.py":
