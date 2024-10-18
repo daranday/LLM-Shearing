@@ -15,29 +15,31 @@ def validate_mds_datasets(root_paths: List[str], n_samples: int = 1000):
     results = {}
 
     for root_path in root_paths:
-        root = Path(root_path)
-        datasets = [
-            d for d in root.iterdir() if d.is_dir() and (d / "index.json").exists()
-        ]
-
-        group_results = {}
-        total_sequences_overall = 0
-        for dataset in datasets:
-            print(f"Validating dataset: {dataset.name} in {root_path}")
-            dataset_results = validate_single_dataset(dataset, n_samples)
-            group_results[dataset.name] = dataset_results
-            total_sequences_overall += dataset_results["total_sequences"]
-
-        results[root_path] = group_results
-
-        # Calculate normalized ratios
-        for dataset_results in group_results.values():
-            dataset_results["normalized_total_sequences"] = (
-                dataset_results["total_sequences"] / total_sequences_overall
-            )
+        results[root_path] = validate_mds_dataset_group(root_path, n_samples)
 
     visualize_results(results)
     return results
+
+
+def validate_mds_dataset_group(root_path: str, n_samples: int = 1000) -> Dict:
+    root = Path(root_path)
+    datasets = [d for d in root.iterdir() if d.is_dir() and (d / "index.json").exists()]
+
+    group_results = {}
+    total_sequences_overall = 0
+    for dataset in datasets:
+        print(f"Validating dataset: {dataset.name} in {root_path}")
+        dataset_results = validate_single_dataset(dataset, n_samples)
+        group_results[dataset.name] = dataset_results
+        total_sequences_overall += dataset_results["total_sequences"]
+
+    # Calculate normalized ratios
+    for dataset_results in group_results.values():
+        dataset_results["normalized_total_sequences"] = (
+            dataset_results["total_sequences"] / total_sequences_overall
+        )
+
+    return group_results
 
 
 def validate_single_dataset(dataset_path: Path, sample_size: int = 1000) -> Dict:

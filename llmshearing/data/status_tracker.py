@@ -16,6 +16,11 @@ class Status:
         Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
         self.cache = Cache(self.cache_dir)
 
+    def reset(self):
+        self.data.clear()
+        self.progress_bars.clear()
+        self.cache.clear()
+
     def track(
         self,
         key: str,

@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import List, Mapping
@@ -8,6 +9,7 @@ import numpy as np
 import ray
 from ray.util.actor_pool import ActorPool
 from status_tracker import Status
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,22 @@ DS_SAMPLING_RATES = {
     "stackexchange": 0.02,
     "wiki": 0.045,
 }
+
+
+class TqdmToFile:
+    def __init__(self, file=sys.stderr):
+        self.file = file
+
+    def write(self, x):
+        if len(x.rstrip()) > 0:
+            tqdm.write(x, file=self.file)
+
+    def flush(self):
+        self.file.flush()
+
+
+original_stdout = sys.stdout
+sys.stdout = TqdmToFile(sys.stdout)
 
 
 def open_dataset(arrow_path: str):
@@ -340,65 +358,65 @@ class DatasetTokenizingActor:
 @ray.remote
 class MDSWriterActor:
     def __init__(
-        self, npys_root: str, output_root: str, data_source: str, total_seqs: int
+        self,
+        npys_root: str,
+        output_root: str,
+        data_source: str,
+        total_seqs: int,
+        skip_seqs: int = 0,
     ):
         self.npys_root = Path(npys_root)
         self.output_root = Path(output_root)
         self.data_source = data_source
         self.total_seqs = total_seqs
+        self.skip_seqs = skip_seqs
         self.writer = MDSWriterWorker(
             data_source=data_source,
             total_seqs=total_seqs,
         )
         self.writer.reset(str(self.output_root))
+        self.skipped_so_far = 0
 
     def run(self):
         for npy_file in sorted(self.npys_root.rglob("*.npy")):
-            block: np.ndarray = np.load(npy_file)
-            for i in range(block.shape[0]):
-                self.writer.write_seq_binary(block[i, :])
-            status.incr(StatusType.tokens_cached(self.data_source), block.size)
-            status.incr(StatusType.total_tokens_cached, block.size)
             if not self.writer.writing:
                 break
+            block: np.ndarray = np.load(npy_file)
+            for i in range(block.shape[0]):
+                if not self.writer.writing:
+                    break
+                if self.skipped_so_far < self.skip_seqs:
+                    self.skipped_so_far += 1
+                    continue
+                self.writer.write_seq_binary(block[i, :])
+                status.incr(StatusType.tokens_cached(self.data_source), block.shape[1])
+                status.incr(StatusType.total_tokens_cached, block.shape[1])
         status.set(StatusType.ds_finished(self.data_source), 1)
 
 
-class TokensCachingPipeline:
+class ShearingDatasetCreator:
     def __init__(
         self,
         arrow_root="/nvmefs1/mk/datasets/cerebras___slim_pajama-627_b/default/0.0.0/2d0accdd58c5d5511943ca1f5ff0e3eb5e293543/",
         output_root="/nvmefs1/daranhe/llm-shearing/out/data_preparation",
         arrow_dataset: ArrowsDataset | None = None,
         sampling_rates: Mapping[str, float] = DS_SAMPLING_RATES,
-        billions: float = 50.4,
         seq_length: int = 4096,
         block_length: int = 300,
-        num_actors: int = 1,
     ):
         self.arrow_root = Path(arrow_root)
         self.output_root = Path(output_root)
         self.arrow_dataset = arrow_dataset or ArrowsDataset(str(self.arrow_root))
         self.output_tokens_root = Path(self.output_root) / "tokens"
 
-        self.billions = billions
         self.sampling_rates = sampling_rates
         self.seq_length = seq_length
         self.block_length = block_length
-        self.total_tokens = int(billions * 1_000_000_000)
-        self.total_seqs = self.total_tokens // seq_length
-        self.total_seqs_per_ds = {
-            ds: int(self.total_seqs * sampling_rate)
-            for ds, sampling_rate in sampling_rates.items()
-        }
 
-        self.num_actors = num_actors
-        self.initialize_status()
-
-    def run(self):
+    def run(self, num_tokenizers: int = 1):
         actors = [
             DatasetTokenizingActor.remote(str(self.arrow_root), str(self.output_root))
-            for _ in range(self.num_actors)
+            for _ in range(num_tokenizers)
         ]
         pool = ActorPool(actors)
         pool.map(
@@ -411,7 +429,18 @@ class TokensCachingPipeline:
 
         status.close()
 
+    def reset_job(self, billions: float):
+        self.billions = billions
+        self.total_tokens = int(billions * 1_000_000_000)
+        self.total_seqs = self.total_tokens // self.seq_length
+        self.total_seqs_per_ds = {
+            ds: int(self.total_seqs * sampling_rate)
+            for ds, sampling_rate in self.sampling_rates.items()
+        }
+        self.initialize_status()
+
     def initialize_status(self):
+        status.reset()
         for ds in DS_NAME_MAPPING.values():
             status.track(
                 StatusType.tokens_cached(ds),
@@ -421,7 +450,7 @@ class TokensCachingPipeline:
             )
         for ds in DS_NAME_MAPPING.values():
             status.track(
-                StatusType.ds_finished(ds), total=1, unit_scale=True, disable=True
+                StatusType.ds_finished(ds), total=1, unit_scale=True, disable=False
             )
         status.track(
             StatusType.num_datasets_processed,
@@ -442,23 +471,41 @@ class TokensCachingPipeline:
         return not all_done
 
     def write_mds(self):
-        actors = [
-            MDSWriterActor.remote(
-                str(self.output_tokens_root / ds),
-                str(self.output_root / "mds" / ds),
-                ds,
-                self.total_seqs_per_ds[ds],
-            )
-            for ds in DS_NAME_MAPPING.values()
+        jobs = [
+            {"purpose": "for_prune", "billions": 0.4},
+            {"purpose": "for_ft", "billions": 50.0},
         ]
-        for actor in actors:
-            actor.run.remote()
+        skip_seqs_per_ds = {ds: 0 for ds in DS_NAME_MAPPING.values()}
+        for job in jobs:
+            logging.info(f"Starting job: {job}")
+            self.reset_job(job["billions"])
 
-        while self.in_progress():
-            time.sleep(1)
+            logging.info(f"Creating actors")
+            actors = [
+                MDSWriterActor.remote(
+                    str(self.output_tokens_root / ds),
+                    str(self.output_root / "mds" / job["purpose"] / ds),
+                    ds,
+                    self.total_seqs_per_ds[ds],
+                    skip_seqs_per_ds[ds],
+                )
+                for ds in DS_NAME_MAPPING.values()
+            ]
 
-        status.close()
+            logging.info(f"Starting actors...")
+            for actor in actors:
+                actor.run.remote()
+
+            logging.info(f"Monitoring progress...")
+            while self.in_progress():
+                time.sleep(1)
+
+            status.close()
+
+            for ds in DS_NAME_MAPPING.values():
+                skip_seqs_per_ds[ds] += self.total_seqs_per_ds[ds]
 
 
 if __name__ == "__main__":
-    fire.Fire(TokensCachingPipeline)
+    logging.basicConfig(level=logging.INFO)
+    fire.Fire(ShearingDatasetCreator)
