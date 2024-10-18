@@ -379,18 +379,18 @@ class MDSWriterActor:
 
     def run(self):
         for npy_file in sorted(self.npys_root.rglob("*.npy")):
-            if not self.writer.writing:
-                break
             block: np.ndarray = np.load(npy_file)
+            num_seqs_processed = 0
             for i in range(block.shape[0]):
-                if not self.writer.writing:
-                    break
                 if self.skipped_so_far < self.skip_seqs:
                     self.skipped_so_far += 1
                     continue
                 self.writer.write_seq_binary(block[i, :])
-                status.incr(StatusType.tokens_cached(self.data_source), block.shape[1])
-                status.incr(StatusType.total_tokens_cached, block.shape[1])
+                num_seqs_processed += 1
+            status.incr(StatusType.tokens_cached(self.data_source), num_seqs_processed * 4096)
+            status.incr(StatusType.total_tokens_cached, num_seqs_processed * 4096)
+            if not self.writer.writing:
+                break
         status.set(StatusType.ds_finished(self.data_source), 1)
 
 
