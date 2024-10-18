@@ -358,6 +358,7 @@ class MDSWriterActor:
             for i in range(block.shape[0]):
                 self.writer.write_seq_binary(block[i, :])
             status.incr(StatusType.tokens_cached(self.data_source), block.size)
+            status.incr(StatusType.total_tokens_cached, block.size)
             if not self.writer.writing:
                 break
         status.set(StatusType.ds_finished(self.data_source), 1)
