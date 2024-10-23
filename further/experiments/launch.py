@@ -48,7 +48,8 @@ class Runner:
             return
 
         try:
-            sp.run(["det", "e", "logs", str(exp.id), "-f"], cwd=SCRIPT_DIR)
+            if self.args.follow:
+                sp.run(["det", "e", "logs", str(exp.id), "-f"], cwd=SCRIPT_DIR)
             state = exp.wait()
             print(f"Experiment {exp.id} completed with state {state}")
             assert state in experiment.TERMINAL_STATES, state
@@ -66,6 +67,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Launching experiment")
     parser.add_argument("--name", type=str, required=True, help="Experiment name")
     parser.add_argument("--detached", action="store_true")
+    parser.add_argument("--no-follow", action="store_false", dest="follow")
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--gpu", type=int)
     parser.add_argument("--env", default="default", choices=["default", "evaluation"])

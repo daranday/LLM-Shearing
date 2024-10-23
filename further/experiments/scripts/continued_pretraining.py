@@ -1,6 +1,7 @@
 import subprocess
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from pathlib import Path
+from typing import Any, List, Optional, Union
 
 from dataclasses_json import dataclass_json
 
@@ -53,6 +54,14 @@ class ContinuedPretrainingConfig:
             prune_run_name = f"llama2_{self.from_model}_pruning_scaling_doremi_to{self.to_model}_sl{self.max_seq_len}"
             run_name = f"{prune_run_name}_ft{self.max_duration}_continued_pretraining"
             self.save_dir = f"{self.output_dir}/{run_name}"
+
+    def get_checkpoint_paths(self) -> List[Path]:
+        pattern = "ep0-ba*-rank0.pt"
+        return sorted(Path(self.save_dir).glob(pattern), key=self.get_checkpoint_id)
+
+    @classmethod
+    def get_checkpoint_id(cls, checkpoint_path: Union[Path, str]) -> int:
+        return int(Path(checkpoint_path).name[len("ep0-ba") : -len("-rank0.pt")])
 
 
 def to_list_str(lst: List[Any]):

@@ -113,7 +113,7 @@ class PipelineConfig:
 
         self.continued_pretraining_config = ContinuedPretrainingConfig(
             proj_dir=self.project_root,
-            data_dir=self.data_dir,
+            data_dir="/nvmefs1/daranhe/llm-shearing/out/data_preparation/mds/for_ft",
             output_dir=self.project_output_dir,
             from_model=self.from_model_size,
             to_model=self.to_model_size,

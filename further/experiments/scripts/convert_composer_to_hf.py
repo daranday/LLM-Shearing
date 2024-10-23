@@ -1,8 +1,8 @@
-import os
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
-from data_types import NetworkDims, job_memory
+from data_types import NetworkDims
 from dataclasses_json import dataclass_json
 
 
@@ -17,9 +17,10 @@ class ConvertComposerToHfConfig:
 
     def __post_init__(self):
         assert self.model_path.endswith(".pt")
-        model_dir = os.path.dirname(self.model_path)
+        model_path = Path(self.model_path)
         if self.output_path is None:
-            self.output_path = f"{model_dir}/hf-{self.model_name}"
+            self.output_path = f"{model_path.parent}/{model_path.stem}.hf"
+            Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
 
 def convert_composer_to_hf(config: ConvertComposerToHfConfig):

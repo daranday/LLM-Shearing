@@ -1,18 +1,17 @@
 # from convert_composer_to_hf import convert_composer_to_hf
 # from evaluate_model import evaluate_model
-from continued_pretraining import run_continued_pretraining
-from pipeline import PipelineConfig, register_exit_handler
+import pipeline as ppl
 
 if __name__ == "__main__":
-    register_exit_handler("7b to 370m")
+    ppl.register_exit_handler("7b to 370m")
 
-    config = PipelineConfig(
+    config = ppl.PipelineConfig(
         from_model_name="NousResearch/Llama-2-7b-hf",
         from_model_size="7b",
         to_model_size="370m",
     )
 
-    run_continued_pretraining(config.continued_pretraining_config)
+    ppl.run_continued_pretraining(config.continued_pretraining_config)
 
     # # Step 6.5: Convert to HF
     # print("Step 6.5: Converting pruned model to HF")

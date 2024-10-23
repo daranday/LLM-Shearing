@@ -30,7 +30,12 @@ def dummy(config: DummyConfig):
 
 
 def launch_workflow(
-    func: Callable, group: str, cpu: bool = False, gpu: int = 0, detached: bool = False
+    func: Callable,
+    group: str,
+    cpu: bool = False,
+    gpu: int = 0,
+    detached: bool = False,
+    no_follow: bool = False,
 ):
     @wraps(func)
     def wrapper(*args):
@@ -48,6 +53,8 @@ def launch_workflow(
             env_args.append(f"--gpu={gpu}")
         if detached:
             env_args.append("--detached")
+        if no_follow:
+            env_args.append("--no-follow")
         subprocess.run(
             [
                 "python",
