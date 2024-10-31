@@ -2,7 +2,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from data_types import NetworkDims
+from data_types import NetworkDims, job_memory
 from dataclasses_json import dataclass_json
 
 
@@ -23,8 +23,8 @@ class ConvertComposerToHfConfig:
             Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
 
+@job_memory.cache
 def convert_composer_to_hf(config: ConvertComposerToHfConfig):
-
     command = [
         "python3",
         "-m",
